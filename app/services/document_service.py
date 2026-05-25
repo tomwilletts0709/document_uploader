@@ -5,18 +5,6 @@ class DocumentService:
     def __init__(self, repo: DocumentRepository): 
         self.repo = repo
     
-    def delete_document(self, document_id: int, user_id: int) -> Documents: 
-        document = self.repo.get_document(document_id)
-
-        if document is None: 
-            raise ValueError(f"No Document Found")
-        
-        ctx = DocumentCtx(document_id=document.id, user_id=user_id, file_path=document.file_path)
-
-        next_state = document_state.handle(ctx, document.status, DocumentEvent.DELETE)
-        self.repo.delete_document(document_id)
-        return document
-    
     def list_documents(self) -> list[Documents]:
         return self.repo.list_documents()
     
@@ -29,7 +17,6 @@ class DocumentService:
     def create_document(self, document_name: str, file_path: str) -> Documents: 
         return self.repo.create_document(document_name, file_path)
     
-
     def start_document(self, document_id: int, user_id: int, file_path: document.file_path) -> Documents: 
         document = self.repo.get_document(document_id)
 
