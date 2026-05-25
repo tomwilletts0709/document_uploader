@@ -1,9 +1,11 @@
-from typing import Generator
-
 import re
+from collections.abc import Generator
 
-from sqlalchemy import Select, create_engine, MetaData, text
-from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session
+from sqlalchemy import MetaData, create_engine, text
+from sqlalchemy.orm import DeclarativeBase, Session, declared_attr, sessionmaker
+
+from app.core.settings import settings
+
 
 metadata = MetaData(
     naming_convention={
@@ -15,36 +17,42 @@ metadata = MetaData(
     }
 )
 
-def resolve_table_name(): 
+
+def resolve_table_name(class_name: str) -> str:
     words = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", class_name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", words).lower()
 
 
-class Base(DeclarativeBase): 
+class Base(DeclarativeBase):
     metadata = metadata
 
-    __reprs_attr__ = []
-    __repr_max_length = 15 
-
-    @declared.attr.directive
+    @declared_attr.directive
     def __tablename__(cls) -> str:
-        return resolve_table_name(cls.__name__) 
+        return resolve_table_name(cls.__name__)
 
 
-engine = create_engine(bind=engine)
+engine = create_engine(settings.DB_URL)
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, autocommit=False)
+SessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+    expire_on_commit=False,
+    autocommit=False,
+)
 
-def init_db():
-    Base.metadata.create_all() 
 
-def check_db_connection():
-    with SessionLocal as session: 
+def init_db() -> None:
+    Base.metadata.create_all(bind=engine)
+
+
+def check_db_connection() -> None:
+    with SessionLocal() as session:
         session.execute(text("SELECT 1"))
 
-def get_db() -> [Generator, None, None]: 
-    db = SessionLocal() 
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
     try:
         yield db
-    finally: 
+    finally:
         db.close()
