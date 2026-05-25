@@ -1,57 +1,52 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from app.domain.document_state import DocumentStatus
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
 from app.models.documents import Documents
+from app.core.database import db_session
+
 
 
 class DocumentRepository:
-    def __init__(self, db_session: Session):
+
+    def __init__(self, db_session: db_session): 
         self.db_session = db_session
 
     def create_document(self, document: Documents) -> Documents:
-        self.db_session.add(document)
+        self.db_session.add()
         self.db_session.commit()
         self.db_session.refresh(document)
         return document
-
-    def get_document(self, document_id: int) -> Documents | None:
+    
+    def get_document(self, document_id: int) -> Documents | None: 
         return self.db_session.get(Documents, document_id)
+    
+    def update_document_status(self, document_id: int, status: str) -> Documents | None: 
+        statement = select(Documents).where(Documents.id == document_id)
+        result = self.db_session.execute(statement).scalar_first()
 
-    def update_document_name(self, document_id: int, document_name: str) -> Documents:
-        document = self.get_document(document_id)
-
-        if document is None:
+        if result is None: 
             raise ValueError(f"Document with id {document_id} not found")
+        
+        result.status = status
 
-        document.document_name = document_name
         self.db_session.commit()
-        self.db_session.refresh(document)
-        return document
-
-    def update_document_status(
-        self, document_id: int, status: DocumentStatus
-    ) -> Documents:
-        document = self.get_document(document_id)
-
-        if document is None:
-            raise ValueError(f"Document with id {document_id} not found")
-
-        document.status = status
-        self.db_session.commit()
-        self.db_session.refresh(document)
-        return document
-
+        self.db_session.refresh(result)
+        return result
+    
     def list_documents(self) -> list[Documents]:
-        statement = select(Documents)
-        return list(self.db_session.scalars(statement).all())
-
-    def delete_document(self, document_id: int) -> Documents:
-        document = self.get_document(document_id)
-
-        if document is None:
+        return self.db_session.query(Documents).all()
+    
+    def delete_document(self, document_id: int) -> None: 
+        document = self.db_session.get(Documents, document_id)
+        
+        if document is None: 
             raise ValueError(f"Document with id {document_id} not found")
-
+        
         self.db_session.delete(document)
         self.db_session.commit()
         return document
+    
+
+
+    

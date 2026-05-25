@@ -1,9 +1,10 @@
 import pytest
+from fastapi.testclient import TestClient
+
+client = TestClient()
 
 
 def test_main(): 
-<<<<<<< ours
-    
-=======
-    
->>>>>>> theirs
+    response = client.get("/")
+    assert response.status_code == 200
+
