@@ -1,4 +1,5 @@
-from app.domain.document_state import Documents, DocumentCtx, DocumentEvent, DocumentState, document_state
+from app.domain.document_state import DocumentCtx, DocumentEvent, document_state
+from app.models.documents import Documents
 from app.repository.document_repository import DocumentRepository
 
 class DocumentService: 
@@ -17,7 +18,7 @@ class DocumentService:
     def create_document(self, document_name: str, file_path: str) -> Documents: 
         return self.repo.create_document(document_name, file_path)
     
-    def start_document(self, document_id: int, user_id: int, file_path: document.file_path) -> Documents: 
+    def start_document(self, document_id: int, user_id: int, file_path: str) -> Documents: 
         document = self.repo.get_document(document_id)
 
         if document is None: 
@@ -25,11 +26,11 @@ class DocumentService:
         
         ctx = DocumentCtx(document_id=document.id, user_id=user_id, file_path=document.file_path)
 
-        next_state = document.state.handle(ctx, document.status, DocumentEvent.START)
+        next_state = document_state.handle(ctx, document.status, DocumentEvent.START)
         self.repo.update_document_status(document_id, next_state)
         return document
     
-    def complete_document(self, document_id: int, user_id: int, file_path: document.file_path) -> Documents: 
+    def complete_document(self, document_id: int, user_id: int, file_path: str) -> Documents: 
         document = self.repo.get_document(document_id) 
         
         if document is None: 
@@ -37,12 +38,12 @@ class DocumentService:
         
         ctx = DocumentCtx(document_id=document.id, user_id=user_id, file_path=document.file_path)
 
-        next_state = document.state.handle(ctx, document.status, DocumentEvent.SUCCESS)
+        next_state = document_state.handle(ctx, document.status, DocumentEvent.SUCCESS)
 
         self.repo.update_document_status(document_id, next_state)
         return document
     
-    def fail_document(self, document_id: int, user_id: int, file_path: document.file_path) -> Documents: 
+    def fail_document(self, document_id: int, user_id: int, file_path: str) -> Documents: 
         document = self.repo.get_document(document_id)
 
         if document is None: 
@@ -50,12 +51,12 @@ class DocumentService:
         
         ctx = DocumentCtx(document_id=document.id, user_id=user_id, file_path=document.file_path)
         
-        next_state = document.state.handle(ctx, document.status, DocumentEvent.FAIL)
+        next_state = document_state.handle(ctx, document.status, DocumentEvent.FAIL)
 
         self.repo.update_document_status(document_id, next_state)
         return document 
 
-    def delete_document(self, document_id: int, user_id: int) -> Documents:
+    def delete_document(self, document_id: int) -> Documents:
         document = self.repo.get_document(document_id)
 
         if document is None: 

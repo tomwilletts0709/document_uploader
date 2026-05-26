@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.domain.sm import StateMachine
 
@@ -15,7 +15,7 @@ class DocumentEvent(Enum):
     START = auto()
     SUCCESS = auto()
     FAIL = auto()
-    DELTE = auto()
+    DELETE = auto()
 
 @dataclass
 class DocumentCtx: 
@@ -34,20 +34,24 @@ def begin_processing(ctx: DocumentCtx) -> None:
 
 @document_state.transition(DocumentState.PROCESSING, DocumentEvent.SUCCESS, DocumentState.COMPLETED)
 def completed_processing(ctx: DocumentCtx) -> None: 
-    ctx.audit.append(f"{ctx.document_id}: Completed")
+    ctx.audit.append(f"{ctx.document_id}: completed")
 
-@document_state.transition(DocumentState.PROCESSING, DocumentEvent.FAIL, DocumentEvent.FAILED)
+@document_state.transition(DocumentState.PROCESSING, DocumentEvent.FAIL, DocumentState.FAILED)
 def failed_processing(ctx: DocumentCtx) -> None: 
-    ctx.audit.append(f"{ctx.document_id}: Failed")
+    ctx.audit.append(f"{ctx.document_id}: failed")
 
-@document_state.transitionI(
-    DocumentState.UPLOADED, 
-    DocumentState.PROCESSING,
-    DocumentState.COMPLETED,
-    DocumentState.FAILED
+@document_state.transition(
+    (
+        DocumentState.UPLOADED, 
+        DocumentState.PROCESSING,
+        DocumentState.COMPLETED,
+        DocumentState.FAILED,
+    ),
+    DocumentEvent.DELETE,
+    DocumentState.DELETED,
 )
 def delete_document(ctx: DocumentCtx)-> None:
-    ctx.audit.appmed(f"{ctx.document_id}: Deleted")
+    ctx.audit.append(f"{ctx.document_id}: deleted")
 
 @dataclass
 class Document: 
@@ -55,7 +59,6 @@ class Document:
     state: DocumentState = DocumentState.UPLOADED
 
     def handle(self, event: DocumentEvent): 
-        self.state = StateMachine.handle(self.ctx, self.state, event)
+        self.state = document_state.handle(self.ctx, self.state, event)
 
   
-

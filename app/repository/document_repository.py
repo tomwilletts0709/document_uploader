@@ -3,17 +3,17 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from app.models.documents import Documents
-from app.core.database import db_session
 
 
 
 class DocumentRepository:
 
-    def __init__(self, db_session: db_session): 
+    def __init__(self, db_session: Session): 
         self.db_session = db_session
 
-    def create_document(self, document: Documents) -> Documents:
-        self.db_session.add()
+    def create_document(self, document_name: str, file_path: str) -> Documents:
+        document = Documents(document_name=document_name, file_path=file_path)
+        self.db_session.add(document)
         self.db_session.commit()
         self.db_session.refresh(document)
         return document
@@ -23,7 +23,7 @@ class DocumentRepository:
     
     def update_document_status(self, document_id: int, status: str) -> Documents | None: 
         statement = select(Documents).where(Documents.id == document_id)
-        result = self.db_session.execute(statement).scalar_first()
+        result = self.db_session.execute(statement).scalar_one_or_none()
 
         if result is None: 
             raise ValueError(f"Document with id {document_id} not found")
@@ -33,6 +33,21 @@ class DocumentRepository:
         self.db_session.commit()
         self.db_session.refresh(result)
         return result
+
+    def update_document(
+        self, document_id: int, document_name: str | None
+    ) -> Documents | None:
+        document = self.db_session.get(Documents, document_id)
+
+        if document is None:
+            return None
+
+        if document_name is not None:
+            document.document_name = document_name
+
+        self.db_session.commit()
+        self.db_session.refresh(document)
+        return document
     
     def list_documents(self) -> list[Documents]:
         return self.db_session.query(Documents).all()
