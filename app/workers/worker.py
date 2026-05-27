@@ -4,6 +4,7 @@ from asyncio import Semaphore
 
 from app.core.database import get_db
 from app.models.document_job import Jobs
+from app.domain.document_state import DocumentState
 
 class Worker: 
     
@@ -24,6 +25,12 @@ class Worker:
                     await self.process(Jobs)
                     await self.db.mark_completed(Jobs.id)
                 except Exception as e: 
-                    await self.db.mark_failed
+                    await self.db.mark_failed(Jobs.id)
+
+    async def process_job(self, job): 
+        for state in job.domain.DocumentState: 
+            if state == DocumentState.COMPLETED: 
+                continue
+            
 
     
