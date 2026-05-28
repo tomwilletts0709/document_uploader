@@ -1,4 +1,4 @@
-from datetime import dattime
+from datetime import datetime, timezone
 
 from sqlachemy import String, DateTime, Enum
 from sqlalchemy.orm import Mapped, mapped_column

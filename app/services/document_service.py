@@ -5,6 +5,10 @@ from app.repository.document_repository import DocumentRepository
 class DocumentService: 
     def __init__(self, repo: DocumentRepository): 
         self.repo = repo
+
+    def create_document(self, document_name: str, file_path: str) -> Documents: 
+        return self.repo.create_document(document_name, file_path)
+
     
     def list_documents(self) -> list[Documents]:
         return self.repo.list_documents()
@@ -13,11 +17,9 @@ class DocumentService:
         return self.repo.get_document(document_id)
     
     def update_document(self, document_id: int, document_name: str) -> Documents | None: 
-        return self.repo.update_document(document_id, document_name)
-    
-    def create_document(self, document_name: str, file_path: str) -> Documents: 
-        return self.repo.create_document(document_name, file_path)
-    
+        updated_document = self.repo.update_document(document_id, document_name)
+        return updated_document
+        
     def start_document(self, document_id: int, user_id: int, file_path: str) -> Documents: 
         document = self.repo.get_document(document_id)
 

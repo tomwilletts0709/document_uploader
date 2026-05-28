@@ -28,21 +28,21 @@ class JobCtx:
 
 
 
-document_state: StateMachine[JobState, JobEvent, JobCtx] = StateMachine()
+job_state: StateMachine[JobState, JobEvent, JobCtx] = StateMachine()
 
-@document_state.transition(JobState.PENDING, JobEvent.CLAIM, JobState.PROCESSING)
+@job_state.transition(JobState.PENDING, JobEvent.CLAIM, JobState.PROCESSING)
 def begin_processing(ctx: JobCtx) -> None:
     ctx.audit.append(f"{ctx.job_id}: processing")
 
-@document_state.transition(JobState.PROCESSING, JobEvent.COMPLETE, JobState.COMPLETED)
+@job_state.transition(JobState.PROCESSING, JobEvent.COMPLETE, JobState.COMPLETED)
 def completed_processing(ctx: JobCtx) -> None: 
     ctx.audit.append(f"{ctx.job_id}: completed")
 
-@document_state.transition(JobState.PROCESSING, JobEvent.FAIL, JobState.FAILED)
+@job_state.transition(JobState.PROCESSING, JobEvent.FAIL, JobState.FAILED)
 def failed_processing(ctx: JobCtx) -> None: 
     ctx.audit.append(f"{ctx.job_id}: failed")
 
-@document_state.transition(
+@job_state.transition(
     (
         JobState.PENDING,
         JobState.PROCESSING,
@@ -59,6 +59,6 @@ class Job:
     state: JobState = JobState.PENDING
 
     def handle(self, event: JobEvent): 
-        self.state = document_state.handle(self.ctx, self.state, event)
+        self.state = job_state.handle(self.ctx, self.state, event)
 
   

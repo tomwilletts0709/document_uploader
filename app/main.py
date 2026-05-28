@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from app.api.routes.document_route import router as document_router
-
-
 import uvicorn
 
 app = FastAPI()

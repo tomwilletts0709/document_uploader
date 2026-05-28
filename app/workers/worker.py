@@ -1,6 +1,6 @@
 import time
 
-from asyncio import Semaphore
+import asyncio
 
 from app.core.database import get_db
 from app.models.document_job import Jobs
